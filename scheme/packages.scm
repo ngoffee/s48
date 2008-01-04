@@ -416,6 +416,7 @@
 	    callback
 	    command-levels
 	    command-processor
+	    command-state
 	    compact-tables
 	    constant-tables
 	    conditions
@@ -456,6 +457,7 @@
             parse-bytecode
 	    placeholders
 	    pp
+	    previews
 	    ;profile
 	    queues
 	    shared-objects
@@ -475,6 +477,7 @@
 	    vector-merge-sort
 	    vector-heap-sort
 	    vector-insertion-sort
+	    vector-quick-sort vector-quick-sort3
 	    sorting
 	    sort
 
@@ -518,6 +521,7 @@
 	    ; R6RS packages
 
 	    r6rs-unicode
+	    r6rs-lists
 	    r6rs-enums
 
 	    ; POSIX packages (see scheme/posix/packages.scm)
@@ -542,6 +546,7 @@
 
             libscheme48
 	    test-suites
+	    matchers
 	    )
 	   :structure)
 	  ((define-signature define-package) :syntax)))

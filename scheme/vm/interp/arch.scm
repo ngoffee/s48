@@ -5,7 +5,7 @@
 
 ;;;; Architecture description
 
-(define architecture-version "Vanilla 38")
+(define architecture-version "Vanilla 39")
 
 ; Things that the VM and the runtime system both need to know.
 
@@ -332,6 +332,7 @@
    bad-procedure
    wrong-number-of-arguments
    wrong-type-argument
+   immutable-argument
    arithmetic-overflow
    index-out-of-range
    heap-overflow
@@ -572,6 +573,7 @@
    weak-pointer
    shared-binding
    unused-d-header1
+   transport-link-cell
 
    ;; B-vector types (not traced by GC)
    string        ; = least b-vector type
@@ -626,5 +628,10 @@
       (channel-id)
       (channel-os-index)
       (channel-close-silently?))
+    (transport-link-cell transport-link-cell? make-transport-link-cell
+      (transport-link-cell-key) ; must always be younger, hence no mutator
+      (transport-link-cell-value set-transport-link-cell-value!)
+      (transport-link-cell-tconc set-transport-link-cell-tconc!)
+      (transport-link-cell-next set-transport-link-cell-next!))
     ))
 

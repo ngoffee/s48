@@ -484,10 +484,9 @@
   (open
    scheme-level-1
    floatnums
-   external-calls
+   external-calls load-dynamic-externals
    (subset srfi-9 (define-record-type)) 
-   (subset srfi-23 (error))
-   (subset posix-time (current-time time-seconds)))
+   (subset srfi-23 (error)))
   (files srfi-27))
 
 ; Basic Format Strings
