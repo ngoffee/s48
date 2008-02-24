@@ -1437,6 +1437,10 @@
 	  ; eval-scanned-forms
 	  ))
 
+(define-interface load-filename-interface
+  (export with-load-filename
+	  current-load-filename))
+
 ; Bindings needed by the form composed by REIFY-STRUCTURES.
 
 (define-interface for-reification-interface
