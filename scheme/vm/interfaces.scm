@@ -71,7 +71,7 @@
 	  header+contents->stob
 	  valid-index?
 	  	
-	  immutable? make-immutable! make-mutable!
+	  immutable? make-immutable!
 	  make-weak-pointer
 	  ))
 
@@ -211,7 +211,6 @@
 	  vm-symbol? vm-symbol-size vm-make-symbol vm-symbol->string
 	  vm-symbol-next vm-set-symbol-next!
 	  closure? closure-size make-closure closure-template closure-env
-	  set-closure-template! set-closure-env!
 	  location? location-size make-location contents set-contents! location-id
 	  cell? cell-size make-cell cell-ref cell-set!
 	  weak-pointer? weak-pointer-size make-weak-pointer weak-pointer-ref

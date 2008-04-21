@@ -370,11 +370,6 @@
     (make-immutable! thing)
     (goto return thing)))
 
-(define-primitive make-mutable! (any->)
-  (lambda (thing)
-    (make-mutable! thing)
-    (goto return thing)))
-
 (define-primitive make-weak-pointer (any->)
   (lambda (init)
     (let ((weak-pointer (make-weak-pointer init weak-pointer-size)))

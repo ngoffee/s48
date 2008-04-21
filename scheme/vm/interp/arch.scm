@@ -5,7 +5,7 @@
 
 ;;;; Architecture description
 
-(define architecture-version "Vanilla 39")
+(define architecture-version "Vanilla 40")
 
 ; Things that the VM and the runtime system both need to know.
 
@@ -221,7 +221,7 @@
                      
   (location-defined? 1)
   (set-location-defined?! 2)
-  ((immutable? make-immutable! make-mutable!) 1)
+  ((immutable? make-immutable!) 1)
 
   ;; channels (unbuffered, non-blocking I/O)
   (open-channel 4)
@@ -601,7 +601,7 @@
     (cell cell? make-cell
       (cell-ref cell-set!))
     (closure closure? make-closure
-      (closure-template set-closure-template!) (closure-env set-closure-env!))
+      (closure-template) (closure-env))
     (weak-pointer weak-pointer? #f ; make-weak-pointer is an op
       (weak-pointer-ref))
     (shared-binding shared-binding? make-shared-binding
