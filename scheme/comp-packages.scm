@@ -208,6 +208,7 @@
 	fluids filenames cells
 	features		;current-noise-port force-output
 	low-exceptions          ;error
+	(subset packages-internal (package-reader))
 	)
   (files (bcomp read-form)))
 
@@ -253,6 +254,7 @@
   (open scheme-level-2 util
 	packages packages-internal
 	meta-types bindings
+	compiler-envs
 	reading-forms
 	filenames
 	low-exceptions
@@ -287,7 +289,9 @@
 
 (define-structure defpackage defpackage-interface
   (open scheme-level-2
-	packages syntactic usual-macros types
+	packages 
+	(subset packages-internal (set-package-reader!))
+	syntactic usual-macros types
 	interfaces
 	source-file-names	;%file-name%
 	low-exceptions		;error

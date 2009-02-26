@@ -1202,12 +1202,13 @@
 	  using-optional-label
 	  jump-instruction
 	  computed-goto-instruction
+	  stack-shuffle-instruction
 	  continuation-data
           lambda-protocol nary-lambda-protocol
           nary-primitive-protocol continuation-protocol
           cwv-continuation-protocol
           make-dispatch-protocol
-	  make-label
+	  make-label label?
 	  label-reference
 	  note-environment
 	  note-source-code
@@ -1347,6 +1348,7 @@
 	  package-accesses
 	  package-clauses
 	  package-file-name
+	  package-reader set-package-reader!
 	  package-opens
 	  set-package-integrate?!
 	  structure-name
@@ -1420,7 +1422,8 @@
 	  set-interaction-environment!
 	  set-scheme-report-environment!
 	  with-interaction-environment
-	  set-reflective-tower-maker!))
+	  set-reflective-tower-maker!
+	  set-reader!))
 
 (define-interface defpackage-interface
   (export ((def			        ;Formerly define-structure
@@ -1429,6 +1432,7 @@
 	    define-structure
 	    define-module
 	    define-syntax
+	    define-reader
 	    define-reflective-tower-maker
 	    export-reflective-tower-maker
 	    compound-interface
