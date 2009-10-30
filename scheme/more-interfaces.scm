@@ -150,6 +150,47 @@
    
 (define-interface profile-commands-interface
   (export profile))
+
+
+(define-interface profiler-interface
+  (export
+	  profile-thunk
+	  profile-count
+	  make-empty-profile-data
+
+	  ;; general data
+	  profile-data-starttime
+	  profile-data-endtime
+	  profile-data-memoryuse
+	  profile-data-gcruns
+	  profile-data-runtime
+	  profile-data-samples
+	  profile-data-templates
+	  profile-data-cycles
+	  profile-data-root
+
+	  ;; printing
+	  profile-display ; everything
+	  profile-display-overview
+	  profile-display-flat
+	  profile-display-tree
+  
+	  profile-display-function-flat
+	  profile-display-function-tree
+	  profile-display-function-cycle
+
+	  ;; flat accessors
+	  profile-function-calls
+	  profile-function-reccalls
+	  profile-function-nonreccalls
+	  profile-function-occurs
+	  profile-function-hist
+	  profile-function-memoryuse
+	  profile-function-timeshare
+	  profile-function-time-cumulative
+	  profile-function-time-self
+  ))
+
    
 (define-interface package-commands-interface
   (export in
@@ -203,7 +244,7 @@
    debug-commands-interface
    inspect-commands-interface
    disassemble-commands-interface
-   ;profile-commands-interface
+   profile-commands-interface
    ))
 
 (define-interface package-commands-internal-interface
@@ -718,15 +759,6 @@
 
 (define-interface reinitializers-interface
   (export (define-reinitializer :syntax)))
-
-(define-interface locks-interface
-  (export lock?
-	  make-lock
-	  obtain-lock
-	  maybe-obtain-lock
-	  release-lock
-	  with-lock
-	  lock-owner))		;really should be internal
 
 (define-interface value-pipes-interface
   (export make-pipe

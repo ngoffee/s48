@@ -99,7 +99,7 @@
         debug-commands
         inspect-commands
         disassemble-commands
-	;profile-commands
+	profile-commands
 	))
 
 ; Image builder.
@@ -418,22 +418,48 @@
       (lambda (e r c)
         (make-node (get-operator 'lap syntax-type) e)))))
 
-; Execution profiler.
-; This no longer works because the thread system uses the timer interrupts
-; it needs.
+; Profiler.
 
-;(define-structures ((profile (export run-with-profiling))
-;                    (profile-commands profile-commands-interface))
-;  (open scheme
-;        command-processor
-;        continuations
-;        architecture
-;        interrupts
-;        tables
-;        primitives     ; schedule-interrupt
-;        wind
-;        disclosers
-;        time
-;        sort
-;        escapes)       ; primitive-cwcc
-;  (files (env profile)))
+(define-structures ((profiler         profiler-interface)
+		    (profile-commands profile-commands-interface))
+  (open scheme
+	architecture
+	cells
+	closures
+	command-processor
+	continuations
+	debug-data
+	debugging
+	define-record-types
+	disclosers
+	environments
+	escapes
+	interrupts
+	locks
+	exceptions
+	(modify primitives (prefix primitives:)
+		(expose collect time memory-status
+			continuation-length continuation-ref
+			unspecific))
+	session-data
+	sort
+	tables
+	templates)
+  (files (env profile)))
+
+(define-structure profiler-instrumentation (export instrument-form)
+  (open scheme
+	bindings
+	compiler-envs
+	environments
+	features
+	exceptions
+	nodes
+	optimizer
+	package-commands-internal
+	packages
+	packages-internal
+	primops
+	profiler
+	util)
+  (files (env profile-instr)))

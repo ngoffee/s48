@@ -195,9 +195,10 @@
 				run-time-structures
 				compiler-structures))
   (files ;; more-interfaces, when not flatloading
-         env-packages
 	 ;; (sort interfaces), when not flatloading
 	 (sort packages)
+         pre-env-packages
+         env-packages
 	 more-packages))
 
 
@@ -457,11 +458,13 @@
 	    net-sockets
 	    package-commands-internal
 	    package-mutation
-            parse-bytecode
+	    parse-bytecode
 	    placeholders
 	    pp
 	    previews
-	    ;profile
+	    profiler
+	    profiler-instrumentation
+	    profiler-internals
 	    queues
 	    shared-objects
 	    tconc-queues

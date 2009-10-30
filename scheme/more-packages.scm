@@ -9,17 +9,18 @@
 
 (define-structure usual-features (export )  ;No exports
   (open analysis		;auto-integration
-	disclosers
-	more-vm-exceptions
         command-processor
         debuginfo
-        ;; Choose any combination of bignums, ratnums, recnums
-	;; bignums		; now in the VM
-	ratnums recnums
+	disclosers
+        floatnums
+	more-vm-exceptions
+	profiler-instrumentation
+	;; pp
 	;; Choose either innums, floatnums, or neither
 	;; innums			;Silly inexact numbers
-        floatnums
-	;; pp
+	;; bignums		; now in the VM
+	;; Choose any combination of bignums, ratnums, recnums
+	ratnums recnums
 	;; The following is listed because this structure is used to
 	;; generate a dependency list used by the Makefile...
 	usual-commands
@@ -62,7 +63,7 @@
   (files (rts recnum)))
 
 (define-structure floatnums
-		  (export floatnum? exp log sin cos tan asin acos atan sqrt)
+  (export floatnum? exp log sin cos tan asin acos atan sqrt)
   (open scheme-level-2
         extended-numbers
         code-vectors
@@ -103,14 +104,6 @@
 	exceptions)
   (files (big placeholder))
   (optimize auto-integrate))
-
-(define-structure locks locks-interface
-  (open scheme-level-2 queues
-	threads threads-internal
-	interrupts
-	proposals)
-  (optimize auto-integrate)
-  (files (big lock)))
 
 ;--------
 ; Unicode
@@ -171,17 +164,6 @@
 	exceptions)
   (files (big random)))
 
-(define-structure sort (export sort-list sort-list!)
-  (open scheme-level-2
-	vector-heap-sort list-merge-sort)
-  (begin
-    (define (sort-list l obj-<)
-      (let ((v (list->vector l)))
-	(vector-heap-sort! obj-< v)
-	(vector->list v)))
-    (define (sort-list! l obj-<)
-      (list-merge-sort! obj-< l))))
-
 (define-structure pp (export p pretty-print define-indentation)
   (open scheme-level-2
         tables
@@ -219,12 +201,12 @@
 (define-structure reduce (export ((reduce iterate)
 				  :syntax)
 				 ((list* list%
-				   vector* vector%
-				   string* string%
-				   count* count%
-				   bits* bits%
-				   input* input%
-				   stream* stream%)
+					 vector* vector%
+					 string* string%
+					 count* count%
+					 bits* bits%
+					 input* input%
+					 stream* stream%)
 				  :syntax))
   (open scheme-level-2
 	bitwise
@@ -338,7 +320,7 @@
 	placeholders
 	shared-bindings
 	byte-vectors
-	;bitwise		;for {enter|extract}_integer() helpers
+					;bitwise		;for {enter|extract}_integer() helpers
 	(subset record-types		(define-record-resumer))
 	(subset records-internal	(:record-type)))
   (files (big import-def)
@@ -405,8 +387,8 @@
 ; Heap traverser
 
 (define-structure traverse
-                  (export traverse-depth-first traverse-breadth-first trail
-                          set-leaf-predicate! usual-leaf-predicate)
+  (export traverse-depth-first traverse-breadth-first trail
+	  set-leaf-predicate! usual-leaf-predicate)
   (open scheme-level-2
 	primitives
         queues tables
