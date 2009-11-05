@@ -195,9 +195,9 @@
 				run-time-structures
 				compiler-structures))
   (files ;; more-interfaces, when not flatloading
-         env-packages
 	 ;; (sort interfaces), when not flatloading
 	 (sort packages)
+         env-packages
 	 more-packages))
 
 
@@ -457,11 +457,14 @@
 	    net-sockets
 	    package-commands-internal
 	    package-mutation
-            parse-bytecode
+	    parse-bytecode
 	    placeholders
 	    pp
 	    previews
-	    ;profile
+	    profiler
+	    profile-commands
+	    profiler-instrumentation
+	    profiler-internals
 	    queues
 	    shared-objects
 	    tconc-queues
@@ -527,6 +530,7 @@
 
 	    ; R6RS packages
 
+	    r6rs-base-comparisons
 	    r6rs-conditions
 	    r6rs-records-procedural
 	    r6rs-records-inspection
