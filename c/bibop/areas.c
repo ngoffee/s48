@@ -73,17 +73,47 @@ Area* s48_delete_area(Area* start, Area* area) {
 
 /* Allocate an area of between MINIMUM and MAXIMUM pages, inclusive. */
     
-Area* s48_allocate_area(unsigned int minimum, unsigned int maximum,
-			unsigned char generation_index, area_type_size_t area_type_size) {
+Area* s48_allocate_area_without_crashing(unsigned long minimum,
+					 unsigned long maximum,
+					 unsigned char generation_index,
+					 area_type_size_t area_type_size) {
   s48_address start;
   Area* area;
-  unsigned int size = s48_allocate_pages(minimum, maximum, &start);
+  unsigned long size = s48_allocate_pages(minimum, maximum, &start);
+
+  if (size == 0) {
+    return NULL;
+  };
+
 #if (BIBOP_LOG)
   s48_bibop_log("s48_allocate_pages: size = %i",
 	    size);
 #endif
-  area = s48_make_area(start, ADD_PAGES(start, size), start,
+
+  /* Safe because S48_ALLOCATE_PAGES has already checked MINIMUM and
+     MAXIMUM with PAGES_TO_BYTES_LOSES_P, and SIZE is less than
+     MAXIMUM.
+
+     This call does crash if S48_MAKE_AREA cannot allocate an Area
+     struct, but avoiding an out-of-memory crash here is too hard to
+     be worthwhile. */
+  area = s48_make_area(start, ADD_PAGES_I_KNOW_THIS_CAN_OVERFLOW(start, size),
+		       start,
 		       generation_index, area_type_size);
+
+  return area;
+}
+
+Area* s48_allocate_area(unsigned long minimum, unsigned long maximum,
+			unsigned char generation_index,
+			area_type_size_t area_type_size) {
+  Area* area = s48_allocate_area_without_crashing(minimum, maximum,
+						  generation_index,
+						  area_type_size);
+
+  if (area == NULL) {
+    s48_gc_error("s48_allocate_area: out of memory");
+  }
 
   return area;
 }
@@ -91,15 +121,17 @@ Area* s48_allocate_area(unsigned int minimum, unsigned int maximum,
 /* Free the pages covered by AREA, and free the struct itself too. */
 
 void s48_free_area(Area* area) {
-  unsigned int size = BYTES_TO_PAGES(area->end - area->start);
+  unsigned long size = BYTES_TO_PAGES(area->end - area->start);
   s48_address start = area->start;
-  unsigned int i;
+  unsigned long i;
   
   s48_free_pagesB(start, size);
 
   /* This is not really needed, I think. It's only a waste of time */
   for (i = 0; i < size; i++) {
-    s48_memory_map_setB(ADD_PAGES(start, i), NULL);
+    /* Safe because I is less than SIZE, which cannot cause an
+       overflow here. */
+    s48_memory_map_setB(ADD_PAGES_I_KNOW_THIS_CAN_OVERFLOW(start, i), NULL);
   }
 
 #ifndef NDEBUG
@@ -159,6 +191,8 @@ Area* s48_make_area(s48_address start, s48_address end,
   int size = BYTES_TO_PAGES(end-start);
   int i;
   for (i = 0; i < size; i++)
-    s48_memory_map_setB(ADD_PAGES(start, i), area);
+    /* Safe because I is less than SIZE, which cannot cause an
+       overflow here. */
+    s48_memory_map_setB(ADD_PAGES_I_KNOW_THIS_CAN_OVERFLOW(start, i), area);
   return area;
 }
