@@ -713,6 +713,8 @@ s48_call_scheme_2(s48_call_t call, s48_ref_t proc, long nargs, ...)
 	  nargs, callback_depth());
 #endif
   
+  s48_copy_local_bvs_to_scheme (call);
+
   s48_shared_binding_check_2(call, callback_binding);
 
   /* It would be nice to push a list of the arguments, but we have no way
@@ -809,6 +811,8 @@ s48_call_scheme_2(s48_call_t call, s48_ref_t proc, long nargs, ...)
 #ifdef DEBUG_FFI
   fprintf(stderr, "[s48_call_scheme_2 returns from depth %d]\n", callback_depth());
 #endif
+
+  s48_copy_local_bvs_from_scheme (call);
 
   return s48_make_local_ref (call, value);
 }
@@ -924,7 +928,7 @@ s48_system_2(s48_call_t call, s48_ref_t string)
   return s48_enter_long_2(call, 
 			  system(s48_false_p_2(call, string)
 				 ? NULL
-				 : s48_extract_byte_vector_2(call, string)));
+				 : s48_extract_byte_vector_readonly_2(call, string)));
 }
 
 /********************************/
@@ -947,6 +951,13 @@ raise_scheme_exception_prelude(long why, long nargs)
     nargs = 11;
   }
   return nargs;
+}
+
+static long
+raise_scheme_exception_prelude_2(s48_call_t call, long why, long nargs)
+{
+  s48_copy_local_bvs_to_scheme(call);
+  return raise_scheme_exception_prelude(why, nargs);
 }
 
 static void
@@ -982,7 +993,7 @@ s48_raise_scheme_exception_2(s48_call_t call, long why, long nargs, ...)
   int i;
   va_list irritants;
 
-  nargs = raise_scheme_exception_prelude(why, nargs + 1) - 1;
+  nargs = raise_scheme_exception_prelude_2(call, why, nargs + 1) - 1;
 
   s48_push_2(call, current_procedure);
 
@@ -1028,7 +1039,7 @@ raise_scheme_standard_exception_2(s48_call_t call, long why, const char* who, co
   int i;
   long nargs = irritant_count + 2; /* who and message */
 
-  nargs = raise_scheme_exception_prelude(why, nargs);
+  nargs = raise_scheme_exception_prelude_2(call, why, nargs);
   irritant_count = nargs - 2;
   
   for (i = 0; i < irritant_count; i++)
@@ -1124,7 +1135,7 @@ s48_os_error_2(s48_call_t call, const char* who, int the_errno,
   long nargs = irritant_count + 2; /* who and errno */
   va_list irritants;
 
-  nargs = raise_scheme_exception_prelude(S48_EXCEPTION_EXTERNAL_OS_ERROR, nargs);
+  nargs = raise_scheme_exception_prelude_2(call, S48_EXCEPTION_EXTERNAL_OS_ERROR, nargs);
   irritant_count = nargs - 2;
   
   va_start(irritants, irritant_count);
@@ -1803,6 +1814,18 @@ s48_string_length_2(s48_call_t call, s48_ref_t string)
   return s48_string_length(s48_deref(string));
 }
 
+long
+s48_string_latin_1_length_2(s48_call_t call, s48_ref_t string)
+{
+  return s48_string_length_2(call, string);
+}
+
+long
+s48_string_latin_1_length_n_2(s48_call_t call, s48_ref_t string, long start, long count)
+{
+  return count;
+}
+
 void
 s48_string_set_2(s48_call_t call, s48_ref_t s, long i, long c)
 {
@@ -1815,6 +1838,54 @@ s48_string_ref_2(s48_call_t call, s48_ref_t s, long i)
   return s48_string_ref(s48_deref(s), i);
 }
 
+/*
+ * Extract strings to local buffer
+ */
+
+#define MAKE_STRING_EXTRACT_FUNCTION(encoding)				\
+  char *s48_extract_##encoding##_from_string_2(s48_call_t call, s48_ref_t sch_s) { \
+    char *buf = s48_make_local_buf(call, s48_string_##encoding##_length_2(call, sch_s)); \
+    s48_copy_string_to_##encoding##_2(call, sch_s, buf);		\
+    return buf;								\
+  }
+
+char *
+s48_extract_latin_1_from_string_2(s48_call_t call, s48_ref_t sch_s) {
+  long size = s48_string_latin_1_length_2(call, sch_s) + 1;
+  char *buf = s48_make_local_buf(call, size + 1);
+  s48_copy_string_to_latin_1_2(call, sch_s, buf);
+  buf[size] = '\0';
+  return buf;
+}
+
+char *
+s48_extract_utf_8_from_string_2(s48_call_t call, s48_ref_t sch_s) {
+  long size = s48_string_utf_8_length_2(call, sch_s) + 1;
+  char *buf = s48_make_local_buf(call, size + 1);
+  s48_copy_string_to_utf_8_2(call, sch_s, buf);
+  buf[size] = '\0';
+  return buf;
+}
+
+uint16_t *
+s48_extract_utf_16be_from_string_2(s48_call_t call, s48_ref_t sch_s) {
+  long size = s48_string_utf_16be_length_2(call, sch_s);
+  uint16_t *buf = 
+    (uint16_t *) s48_make_local_buf(call, (size + 1) * sizeof(uint16_t));
+  s48_copy_string_to_utf_16be_2(call, sch_s, buf);
+  buf[size] = 0;
+  return buf;
+}
+
+uint16_t *
+s48_extract_utf_16le_from_string_2(s48_call_t call, s48_ref_t sch_s) {
+  long size = s48_string_utf_16le_length_2(call, sch_s);
+  uint16_t *buf = 
+    (uint16_t *) s48_make_local_buf(call, (size + 1) * sizeof(uint16_t));
+  s48_copy_string_to_utf_16le_2(call, sch_s, buf);
+  buf[size] = 0;
+  return buf;
+}
 
 /*
  * Doubles and characters are straightforward.
@@ -2014,7 +2085,7 @@ s48_make_weak_pointer_2(s48_call_t call, s48_ref_t value)
 s48_value
 s48_enter_byte_vector(char *bytes, long length)
 {
-  s48_value obj = s48_allocate_stob(S48_STOBTYPE_BYTE_VECTOR, length);
+  s48_value obj = s48_make_byte_vector(length);
   memcpy(S48_UNSAFE_EXTRACT_BYTE_VECTOR(obj), bytes, length);
   return obj;
 }
@@ -2022,8 +2093,24 @@ s48_enter_byte_vector(char *bytes, long length)
 s48_ref_t
 s48_enter_byte_vector_2(s48_call_t call, const char *bytes, long length)
 {
-  s48_ref_t ref = s48_make_local_ref(call, s48_allocate_stob(S48_STOBTYPE_BYTE_VECTOR, length));
-  memcpy(s48_unsafe_extract_byte_vector_2(call, ref), bytes, length);
+  s48_ref_t ref = s48_make_byte_vector_2(call, length);
+  s48_enter_byte_vector_region_2(call, ref, 0, length, (char *) bytes);
+  return ref;
+}
+
+s48_value
+s48_enter_unmovable_byte_vector(char *bytes, long length)
+{
+  s48_value obj = s48_make_unmovable_byte_vector(length);
+  memcpy(S48_UNSAFE_EXTRACT_BYTE_VECTOR(obj), bytes, length);
+  return obj;
+}
+
+s48_ref_t
+s48_enter_unmovable_byte_vector_2(s48_call_t call, const char *bytes, long length)
+{
+  s48_ref_t ref = s48_make_unmovable_byte_vector_2(call, length);
+  s48_enter_byte_vector_region_2(call, ref, 0, length, (char *) bytes);
   return ref;
 }
 
@@ -2038,9 +2125,96 @@ s48_extract_byte_vector(s48_value byte_vector)
 char *
 s48_extract_byte_vector_2(s48_call_t call, s48_ref_t byte_vector)
 {
-  s48_check_value_2(call, byte_vector);
+  long s = s48_byte_vector_length_2(call, byte_vector);
+  char *buf = s48_make_local_bv(call, byte_vector, s);
+  return buf;
+}
 
+char *
+s48_extract_byte_vector_readonly_2(s48_call_t call, s48_ref_t byte_vector)
+{
+  long s = s48_byte_vector_length_2(call, byte_vector);
+  char *buf = s48_make_local_bv_readonly(call, byte_vector, s);
+  return buf;
+}
+
+void
+s48_extract_byte_vector_region_2(s48_call_t call, s48_ref_t byte_vector,
+				 long start, long length, char *buf)
+{
+  char *scheme_buf;
+  s48_check_value_2(call, byte_vector);
+  scheme_buf = s48_unsafe_extract_byte_vector_2(call, byte_vector);
+  memcpy(buf, scheme_buf + start, length);
+}
+
+void
+s48_enter_byte_vector_region_2(s48_call_t call, s48_ref_t byte_vector,
+			       long start, long length, char *buf)
+{
+  char *scheme_buf;
+  s48_check_value_2(call, byte_vector);
+  scheme_buf = s48_unsafe_extract_byte_vector_2(call, byte_vector);
+  memcpy(scheme_buf + start, buf, length);
+}
+
+void
+s48_copy_from_byte_vector_2(s48_call_t call, s48_ref_t byte_vector, char *buf)
+{
+  s48_extract_byte_vector_region_2(call, byte_vector, 0,
+				   s48_byte_vector_length_2(call, byte_vector), buf);
+}
+
+void
+s48_copy_to_byte_vector_2(s48_call_t call, s48_ref_t byte_vector, char *buf)
+{
+  s48_enter_byte_vector_region_2(call, byte_vector, 0,
+				   s48_byte_vector_length_2(call, byte_vector), buf);
+}
+
+psbool
+s48_unmovable_p(s48_call_t call, s48_ref_t ref)
+{
+  return s48_unmovableP(s48_deref(ref));
+}
+
+char *
+s48_extract_unmovable_byte_vector_2(s48_call_t call, s48_ref_t byte_vector)
+{
+  s48_check_value_2(call, byte_vector);
+  if (!s48_unmovable_p(call, byte_vector))
+    s48_assertion_violation("s48_extract_unmovable_byte_vector_2",
+			    "not an unmovable byte vector", 1, byte_vector);
   return s48_unsafe_extract_byte_vector_2(call, byte_vector);
+}
+
+/* 
+   The returned byte vector by s48_extract_byte_vector_unmanaged_2 may
+   be a copy of the Scheme byte vector, changes made to the returned
+   byte vector will not necessarily be reflected in Scheme until
+   s48_release_byte_vector_2 is called. 
+*/
+char *
+s48_extract_byte_vector_unmanaged_2(s48_call_t call, s48_ref_t byte_vector)
+{
+  if (s48_unmovable_p(call, byte_vector))
+    {
+      return s48_extract_unmovable_byte_vector_2(call, byte_vector);
+    }
+  else
+    {
+      long len = s48_byte_vector_length_2(call, byte_vector);
+      char *buf = s48_make_local_buf(call, len);
+      s48_extract_byte_vector_region_2(call, byte_vector, 0, len, buf);
+      return buf;
+    }
+}
+
+void
+s48_release_byte_vector_2(s48_call_t call, s48_ref_t byte_vector, char *buf)
+{
+  if (!s48_unmovable_p(call, byte_vector))
+    s48_copy_to_byte_vector_2(call, byte_vector, buf);
 }
 
 /*
@@ -2070,9 +2244,9 @@ s48_make_string_2(s48_call_t call, int length, long init)
 }
 
 s48_value
-s48_make_vector(int length, s48_value init)
+s48_make_vector(long length, s48_value init)
 {
-  int i;
+  long i;
   s48_value obj;
   S48_DECLARE_GC_PROTECT(1);
 
@@ -2088,9 +2262,9 @@ s48_make_vector(int length, s48_value init)
 }
 
 s48_ref_t
-s48_make_vector_2(s48_call_t call, int length, s48_ref_t init)
+s48_make_vector_2(s48_call_t call, long length, s48_ref_t init)
 {
-  int i;
+  long i;
   s48_ref_t ref = s48_make_local_ref(call, s48_allocate_stob(S48_STOBTYPE_VECTOR, length));
   for (i = 0; i < length; ++i)
     s48_unsafe_vector_set_2(call, ref, i, init);
@@ -2098,15 +2272,27 @@ s48_make_vector_2(s48_call_t call, int length, s48_ref_t init)
 }
 
 s48_value
-s48_make_byte_vector(int length)
+s48_make_byte_vector(long length)
 {
     return s48_allocate_stob(S48_STOBTYPE_BYTE_VECTOR, length);
 }
 
 s48_ref_t
-s48_make_byte_vector_2(s48_call_t call, int length)
+s48_make_byte_vector_2(s48_call_t call, long length)
 {
   return s48_make_local_ref(call, s48_allocate_stob(S48_STOBTYPE_BYTE_VECTOR, length));
+}
+
+s48_value
+s48_make_unmovable_byte_vector(long length)
+{
+    return s48_allocate_unmovable_stob(S48_STOBTYPE_BYTE_VECTOR, length);
+}
+
+s48_ref_t
+s48_make_unmovable_byte_vector_2(s48_call_t call, long length)
+{
+  return s48_make_local_ref(call, s48_allocate_unmovable_stob(S48_STOBTYPE_BYTE_VECTOR, length));
 }
 
 s48_value
@@ -2121,9 +2307,9 @@ s48_enter_byte_substring(char *str, long length)
 s48_ref_t
 s48_enter_byte_substring_2(s48_call_t call, const char *str, long length)
 {
-  s48_ref_t ref = s48_make_local_ref(call, s48_allocate_stob(S48_STOBTYPE_BYTE_VECTOR, length + 1));
-  memcpy(s48_unsafe_extract_byte_vector_2(call, ref), str, length);
-  *(s48_unsafe_extract_byte_vector_2(call, ref) + length) = '\0';
+  s48_ref_t ref = s48_make_byte_vector_2(call, length + 1);
+  s48_enter_byte_vector_region_2(call, ref, 0, length, (char *) str);
+  s48_byte_vector_set_2(call, ref, length, '\0');
   return ref;
 }
 
@@ -2142,7 +2328,7 @@ s48_enter_byte_string_2(s48_call_t call, const char *str)
 s48_value
 s48_make_record(s48_value type_shared_binding)
 {
-    int i, number_of_fields;
+    long i, number_of_fields;
     s48_value record = S48_FALSE;
     s48_value record_type = S48_FALSE;
     S48_DECLARE_GC_PROTECT(1);
@@ -2173,7 +2359,7 @@ s48_make_record(s48_value type_shared_binding)
 s48_ref_t
 s48_make_record_2(s48_call_t call, s48_ref_t type_shared_binding)
 {
-    int i, number_of_fields;
+    long i, number_of_fields;
     s48_ref_t record;
     s48_ref_t record_type;
 

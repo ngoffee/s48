@@ -43,12 +43,22 @@
   (s48-allocate-traced+gc len))
 
 ; unmovable objects are not supported.
-(define (s48-gc-can-allocate-untraced-unmovable?) #f)
+(define (s48-gc-can-allocate-unmovable?) #f)
+(define (s48-allocate-traced-unmovable+gc len)
+  (= len 0) ;; for the type-checker
+  (error "twospace gc does not support unmovable objects")
+  null-address ;; for the correct signature
+  )
+
 (define (s48-allocate-untraced-unmovable+gc len)
   (= len 0) ;; for the type-checker
   (error "twospace gc does not support unmovable objects")
   null-address ;; for the correct signature
   )
+
+(define (s48-unmovable? stob) 
+  (= stob 0) ;; for the type-checker
+  #f)
 
 ;; For allocation done outside the VM.
 
@@ -69,3 +79,10 @@
 
 (define (s48-allocate-weak-stob type size)
   (s48-allocate-stob type size))
+
+(define (s48-allocate-unmovable-stob type size)
+  (= type 0) ;; for the type-checker
+  (= size 0) ;; for the type-checker
+  (error "twospace gc does not support unmovable objects")
+  0 ;; for the correct signature
+  )

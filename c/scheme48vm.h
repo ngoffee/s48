@@ -41,6 +41,8 @@ extern void		s48_setup_external_exception(s48_value exception,
 						     long nargs);
 extern s48_value	s48_resetup_external_exception(s48_value exception,
 						       long additional_nargs);
+extern void		s48_argument_type_violation(s48_value value);
+extern void		s48_range_violation(s48_value value, s48_value min, s48_value max);
 extern void		s48_push(s48_value value);
 extern s48_value	s48_stack_ref(long offset);
 extern void		s48_stack_setB(long offset, s48_value value);
@@ -76,8 +78,12 @@ extern s48_value	s48_really_add_channel(s48_value, s48_value, long);
 
 /* external allocation and GC roots */
 extern void		s48_gc_root(void);
+extern long		s48_gc_run_time(long *);       
 extern s48_value	s48_allocate_stob(long type, long size);
 extern s48_value	s48_allocate_weak_stob(long type, long size);
+extern s48_value	s48_allocate_unmovable_stob(long type, long size);
+extern psbool		s48_unmovableP(s48_value);
+extern psbool		s48_gc_can_allocate_unmovableP(void);
 S48_EXTERN void		s48_push_gc_rootsB(char *, long);
 S48_EXTERN psbool	s48_pop_gc_rootsB(void);
 extern char *		s48_set_gc_roots_baseB(void);
@@ -86,6 +92,7 @@ S48_EXTERN char *	s48_register_gc_rootB(char *);
 S48_EXTERN void		s48_unregister_gc_rootB(char *);
 extern void		s48_reset_external_rootsB(void);
 extern void		s48_post_gc_cleanup(psbool, psbool);
+extern void		s48_trace_external_calls(void);
 
 /* for native code */
 extern void		s48_copy_stack_into_heap();

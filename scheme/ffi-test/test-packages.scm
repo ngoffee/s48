@@ -20,6 +20,12 @@
 	  ffi-vector-set!
 	  ffi-vector-ref
 	  ffi-make-byte-vector
+	  ffi-extract-byte-vector
+	  ffi-extract-byte-vector-readonly
+	  ffi-extract-and-modify-byte-vector
+	  ffi-extract-twice-and-modify-byte-vector
+	  ffi-extract-byte-vector-and-call-scheme
+	  ffi-extract-byte-vector-assertion
 	  ffi-make-vector
 	  ffi-enums
 	  ffi-get-color-enum-set
@@ -87,7 +93,7 @@
 (define-structure ffi-misc-test (export ffi-misc-tests)
   (open scheme test-suites
 	load-dynamic-externals ffi-funcs finite-types
-	byte-vectors enum-sets     
+	byte-vectors enum-sets exceptions conditions    
 	external-calls primitives records define-record-types)
   (files ffi-misc-check))
 

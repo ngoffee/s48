@@ -29,8 +29,10 @@ s48_address s48_allocate_small(long len_in_bytes);
 s48_address s48_allocate_tracedAgc(long len_in_bytes);
 s48_address s48_allocate_untracedAgc(long len_in_bytes);
 s48_address s48_allocate_weakAgc(long len_in_bytes);
-psbool s48_gc_can_allocate_untraced_unmovableP();
+psbool s48_gc_can_allocate_unmovableP();
+s48_address s48_allocate_traced_unmovableAgc(long len_in_bytes);
 s48_address s48_allocate_untraced_unmovableAgc(long len_in_bytes);
+psbool s48_unmovableP(s48_value stob);
 
 extern void s48_initialize_bibop_heap();
 
