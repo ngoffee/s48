@@ -321,12 +321,12 @@
 ; a spurious warning if this is the end of the procedure).
 
 (define (write-merged-return name return-count port)
-  (format port "~% ~A_return:~%  switch (~A_return_tag) {~%" name name)
+  (format port "~%#ifndef USE_DIRECT_THREADING~% ~A_return:~%  switch (~A_return_tag) {~%" name name)
   (do ((i 0 (+ i 1)))
       ((>= i (- return-count 1)))
     (format port "  case ~S: goto ~A_return_~S;~%" i name i))
   (format port "  default: goto ~A_return_~S;~%" name (- return-count 1))
-  (format port "  }"))
+  (format port "  }~%#endif~%"))
 
 (define (write-merged-declarations forms port)
   (for-each (lambda (f)
@@ -337,7 +337,7 @@
 (define (write-merged-declaration form port)
   (let ((name (form-c-name form))
 	(types (lambda-return-types (form-value form))))
-    (format port "~%  int ~A_return_tag;" name)
+    (format port "~%#ifdef USE_DIRECT_THREADING~%  void *~A_return_address;~%#else~%  int ~A_return_tag;~%#endif" name name)
     (do ((i 0 (+ i 1))
 	 (types types (cdr types)))
 	((null? types))
