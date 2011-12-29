@@ -2,7 +2,7 @@
  * Part of Scheme 48 1.9.  See file COPYING for notices and license.
  *
  * Authors: Richard Kelsey, Jonathan Rees, Marcus Crestani, Mike Sperber,
- * Robert Ransom, Harald Glab-Phlak
+ * Robert Ransom, Harald Glab-Phlak, Marcel Turino
  */
 
 #include <stdlib.h>
@@ -88,7 +88,6 @@ static s48_value external_return_value;
 
 /* Exports to Scheme */
 static s48_value	s48_clear_stack_top(void);
-static s48_ref_t	s48_clear_stack_top_2(s48_call_t call);
 static s48_ref_t	s48_system_2(s48_call_t call, s48_ref_t string);
 
 /* Imports from Scheme */
@@ -99,8 +98,8 @@ static s48_ref_t 	delay_callback_return_binding = NULL;
 
 #ifdef DEBUG_FFI
 static s48_value	s48_trampoline(s48_value proc, s48_value nargs);
-static s48_ref_t        s48_trampoline_2(s48_call_t call, s48_ref_t proc, s48_ref_t nargs);
 #endif
+static s48_ref_t        s48_trampoline_2(s48_call_t call, s48_ref_t proc, s48_ref_t nargs);
 
 void
 s48_initialize_external()
@@ -121,13 +120,14 @@ s48_initialize_external()
   current_procedure = s48_make_global_ref(_s48_value_false);
 
   S48_EXPORT_FUNCTION(s48_clear_stack_top);
-  S48_EXPORT_FUNCTION(s48_clear_stack_top_2);
   S48_EXPORT_FUNCTION(s48_system_2);
 
 #ifdef DEBUG_FFI
   S48_EXPORT_FUNCTION(s48_trampoline);
+#endif
   S48_EXPORT_FUNCTION(s48_trampoline_2);
 
+#ifdef DEBUG_FFI
   init_debug_ffi ();
 #endif
 }
@@ -536,9 +536,9 @@ s48_external_ecall(s48_call_t call,
     result = S48_UNSPECIFIC;
 
   /* Check to see if a thread is waiting to return to the next block down. */
-     
+  s48_ref_t sbt = NULL;
   if (!s48_false_p_2(call, current_stack_block) &&
-      !s48_false_p_2(call, STACK_BLOCK_THREAD_2(call, current_stack_block))) {
+      !s48_false_p_2(call, sbt = STACK_BLOCK_THREAD_2(call, current_stack_block))) {
 #ifdef DEBUG_FFI
     fprintf(stderr, "[releasing return at %d]\n", callback_depth());
 #endif
@@ -556,17 +556,24 @@ s48_external_ecall(s48_call_t call,
 	s48_free_local_ref(call, cexternal_return_value);
 
       result = S48_UNSPECIFIC;
-    }
-    else {
+    } else {
+      if (cexternal_return_value) {
       s48_setup_external_exception(S48_EXCEPTION_CALLBACK_RETURN_UNCOVERED, 2);
       s48_push_2(call, current_stack_block);
       s48_push_2(call, cexternal_return_value);
+      } else {
+	s48_setup_external_exception(S48_EXCEPTION_CALLBACK_RETURN_UNCOVERED, 1);
+	s48_push_2(call, current_stack_block);
+      }
       result = S48_UNSPECIFIC;
     }
   } else {
     if (cexternal_return_value)
       s48_free_local_ref(call, cexternal_return_value);
   }
+
+  if(sbt != NULL)
+      s48_free_local_ref(call, sbt);
 
   return result;
 }
@@ -834,15 +841,6 @@ s48_clear_stack_top()
   return S48_UNSPECIFIC;
 }
 
-static s48_ref_t
-s48_clear_stack_top_2(s48_call_t call)
-{
-#ifdef DEBUG_FFI
-  fprintf(stderr, "[Clearing stack top]\n");
-#endif
-  return s48_unspecific_2(call);
-}
-
 #ifdef DEBUG_FFI
 /*
  * For testing callbacks.  This just calls its argument on the specified number
@@ -885,14 +883,15 @@ s48_trampoline(s48_value proc, s48_value nargs)
     return S48_UNDEFINED; /* not that we ever get here */
   }
 }
+#endif
 
 static s48_ref_t 
 s48_trampoline_2(s48_call_t call, s48_ref_t proc, s48_ref_t nargs)
 {
-
+#ifdef DEBUG_FFI
   fprintf(stderr, "[C trampoline_2, %ld args]\n", s48_unsafe_extract_long_2(call, nargs));
-
-  switch (s48_extract_fixnum(s48_deref(nargs))) {
+#endif
+  switch (s48_extract_long_2(call, nargs)) {
   case -2: { /* provoke exception: GC protection mismatch */
     S48_DECLARE_GC_PROTECT(1);
     
@@ -901,10 +900,9 @@ s48_trampoline_2(s48_call_t call, s48_ref_t proc, s48_ref_t nargs)
     return s48_false_2(call);
   }
   case 0: {
-    s48_ref_t result = s48_call_scheme_2(call, proc, 1,
-					  s48_make_local_ref (call, s48_enter_fixnum(0)));
-    if (s48_deref(result) == S48_FALSE)
-      s48_assertion_violation("s48_trampoline_2", "trampoline bouncing", 0);
+    s48_ref_t result = s48_call_scheme_2(call, proc, 0);
+    if (s48_false_p_2(call, result))
+      s48_assertion_violation_2(call, "s48_trampoline_2", "trampoline bouncing", 0);
     return result;
   }
   case 1:
@@ -920,11 +918,10 @@ s48_trampoline_2(s48_call_t call, s48_ref_t proc, s48_ref_t nargs)
 			     s48_make_local_ref (call, s48_enter_fixnum(200)),
 			     s48_make_local_ref (call, s48_enter_fixnum(300)));
   default:
-    s48_assertion_violation("s48_trampoline_2", "invalid number of arguments", 1, nargs);
+    s48_assertion_violation_2(call, "s48_trampoline_2", "invalid number of arguments", 1, nargs);
     return s48_undefined_2(call); /* not that we ever get here */
   }
 }
-#endif
 
 static s48_ref_t
 s48_system_2(s48_call_t call, s48_ref_t string)

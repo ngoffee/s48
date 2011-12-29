@@ -1,6 +1,6 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
-; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber
+; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Will Noble
 
 ; Transforms
 
@@ -115,7 +115,7 @@
 	       (lookup env-of-use name)))
 	 (lambda (name type . rest)
 	   (assertion-violation 'bind-aliases "no definitions allowed" name))
-	 #f
+	 (comp-env-macro-eval env-of-use)
 	 #f)
 	env-of-use)))
 

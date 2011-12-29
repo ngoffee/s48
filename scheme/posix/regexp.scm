@@ -1,6 +1,7 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
-; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus Crestani
+; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus Crestani,
+; Roderic Morris
 
 ; Exports:
 ;   make-regexp
@@ -113,9 +114,10 @@
 						  (regexp-ignore-case? regexp)
 						  (regexp-submatches? regexp)
 						  (regexp-newline? regexp))))
-	      (error 'regexo.compiled
+	      (error 'regexp.compiled
 		     (if message
-			 (string-append "Posix regexp: " message)
+			 (string-append "Posix regexp: " (os-string->string
+                                        (byte-vector->os-string message)))
 			 "inconsistent results from Posix regexp compiler")
 		     regexp))))))
 

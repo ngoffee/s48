@@ -1,7 +1,7 @@
 /*
  * Part of Scheme 48 1.9.  See file COPYING for notices and license.
  *
- * Authors: Mike Sperber
+ * Authors: Mike Sperber, Will Noble
  */
 
 
@@ -31,13 +31,11 @@ s48_on_load(void)
 }
 
 extern void s48_uninit_posix_proc(void);
-extern void s48_uninit_posix_errno(void);
 extern void s48_uninit_posix_syslog(void);
 
 void
 s48_on_unload(void)
 {
   s48_uninit_posix_proc();
-  s48_uninit_posix_errno();
   s48_uninit_posix_syslog();
 }

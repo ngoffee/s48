@@ -1,7 +1,7 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
 ; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Martin Gasbichler,
-; David Frese
+; David Frese, Marcus Crestani
 
 ; Called when returning off of the end of the stack.
 
@@ -89,7 +89,12 @@
 (define current-continuation-size current-stack-size)
 
 (define (copy-current-continuation-to-heap key)
-  (preserve-continuation key))
+  (let ((arg-count (operands-on-stack))
+        (top *stack*))
+    (let ((cont (preserve-continuation key)))
+      (set! *stack* *cont*)
+      (move-stack-arguments! top arg-count)
+      cont)))
 
 (define (preserve-continuation key)
   (if (false? (address->integer *cont*))

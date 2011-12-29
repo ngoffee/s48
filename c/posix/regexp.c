@@ -1,7 +1,8 @@
 /*
  * Part of Scheme 48 1.9.  See file COPYING for notices and license.
  *
- * Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus Crestani
+ * Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus Crestani,
+ * Roderic Morris
  */
 
 /*
@@ -191,7 +192,7 @@ posix_regexp_error_message(s48_call_t call, s48_ref_t pattern,
     (s48_extract_boolean_2(call, submatches_p)  ? 0 : REG_NOSUB) |
     (s48_extract_boolean_2(call, newline_p)     ? REG_NEWLINE  : 0);
 
-  s48_check_string_2(call, pattern);
+  s48_check_byte_vector_2(call, pattern);
 
   status = regcomp(&compiled_regex, s48_extract_byte_vector_readonly_2(call, pattern), flags);
 
@@ -206,7 +207,7 @@ posix_regexp_error_message(s48_call_t call, s48_ref_t pattern,
     buffer = s48_make_byte_vector_2(call, buffer_size);
     regerror(status,
 	     &compiled_regex,
-	     s48_extract_byte_vector_readonly_2(call, buffer),
+	     s48_extract_byte_vector_2(call, buffer),
 	     buffer_size);
     
     return buffer; }

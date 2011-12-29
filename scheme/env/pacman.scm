@@ -1,6 +1,7 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
-; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Robert Ransom
+; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Robert Ransom,
+; Marcus Crestani, Sebastian Rheinnecker
 
 ; PACkage-manipulation comMANds
 
@@ -374,3 +375,64 @@
 ;
 ;(define-method &evaluate (form (env :package))
 ;  ((package-evaluator env) form env))
+
+
+; Show information about packages
+
+;; prints known packages
+(define-command-syntax 'show-known-packages "" 
+  "shows all known packages" '())
+
+(define (show-known-packages)
+  (for-each (lambda (entry)
+              (write entry)
+              (newline)) 
+            (filter symbol? (table->entry-list package-name-table))))
+
+;; prints exported names
+(define-command-syntax 'show-interface "<struct> ..." 
+  "shows exported names of the given structures" '(&rest form))
+
+(define (show-interface . structs)
+  (if (null? structs)
+      '?
+      (let ((names '()))
+        (for-each 
+	 (lambda (struct)
+	   (let ((probe (and (package-lookup (config-package) struct)
+			     (eval struct (config-package)))))
+	     (if (structure? probe)
+		 (begin
+		   (for-each-declaration
+		     (lambda (name package-name type)
+		       (if (not (assq name names))  ; compound signatures...
+			   (set! names (cons (cons name type) 
+                                             names))))
+		     (structure-interface probe))
+		   (for-each (lambda (pair)
+                               (let ((name (car pair))
+                                     (type (cdr pair)))
+			         (write name)
+			         (write-char #\space)
+                                 (write (careful-type->sexp type))
+                                 (newline)))
+			     names))
+		 (begin 
+		   (display "[")
+		   (write struct) 
+		   (display " not found]")
+		   (write-char #\space)
+                   (newline)))))
+	 structs))))
+
+(define (careful-type->sexp thing)
+  (cond ((not thing) 'undefined)
+	((or (symbol? thing)
+	     (null? thing)
+	     (number? thing))
+	 thing)     ;?
+	((pair? thing)    ;e.g. (variable #{Type :value})
+	 (cons (careful-type->sexp (car thing))
+	       (careful-type->sexp (cdr thing))))
+	(else
+	 (type->sexp thing #t))))

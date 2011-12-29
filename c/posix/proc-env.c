@@ -2,7 +2,7 @@
  * Part of Scheme 48 1.9.  See file COPYING for notices and license.
  *
  * Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus Crestani,
- * Roderic Morris
+ * Roderic Morris, Will Noble
  */
 
 /*
@@ -69,10 +69,10 @@ posix_get_pid(s48_call_t call, s48_ref_t parent_p)
 {
   extern char going;
   going = 1 == 0;
-  return s48_enter_pid(call,
-		       s48_extract_boolean_2(call, parent_p) ?
-		       getppid() :
-		       getpid());
+  return s48_enter_long_2(call,
+			  s48_extract_boolean_2(call, parent_p) ?
+			  getppid() :
+			  getpid());
 }
 
 static s48_ref_t
@@ -82,7 +82,7 @@ posix_set_sid(s48_call_t call)
 
   RETRY_OR_RAISE_NEG(pid, setsid());
 
-  return s48_enter_pid(call, pid);
+  return s48_enter_long_2(call, pid);
 }
 
 static s48_ref_t

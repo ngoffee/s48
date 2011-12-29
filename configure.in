@@ -1,7 +1,8 @@
 dnl Part of Scheme 48 1.9.  See file COPYING for notices and license.
 dnl
 dnl Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcus
-dnl Crestani, Eric Knauel, David Frese, Ivan Shmakov, Taylor Campbell
+dnl Crestani, Eric Knauel, David Frese, Ivan Shmakov, Taylor Campbell,
+dnl Will Noble
 dnl
 dnl Process this file with autoconf >= 2.60 to produce a configure script.
 dnl To do this, run:
@@ -70,7 +71,7 @@ AC_INIT(c/prescheme.h)
      AC_CHECK_HEADERS(sysexits.h)
      AC_CHECK_HEADERS(langinfo.h)
      AC_CHECK_FUNC(nl_langinfo, [], [AC_LIBOBJ([c/fake/langinfo])])
-     AC_CHECK_FUNCS(gettimeofday ftime select setitimer sigaction)
+     AC_CHECK_FUNCS(gettimeofday ftime select setitimer sigaction execvpe)
      AC_CHECK_HEADERS(poll.h)
      AC_CHECK_FUNCS(poll)
      S48_GLIB

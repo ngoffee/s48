@@ -1,7 +1,7 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
 ; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Marcel Turino,
-; Marcus Crestani, Robert Ransom, Martin Gasbichler
+; Marcus Crestani, Robert Ransom, Martin Gasbichler, Sebastian Rheinnecker
 
 ; Packages for the programming environment: the command processor, inspector,
 ; and disassembler and assembler.
@@ -149,6 +149,8 @@
 	i/o			; force-output, current-error-port, silently
 	exceptions
 	util			; every
+	tables			; table->entry-list
+        meta-types              ; type->sexp
 	os-strings
         fluids)
   (files (env pacman)))

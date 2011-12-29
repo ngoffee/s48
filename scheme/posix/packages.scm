@@ -1,7 +1,7 @@
 ; Part of Scheme 48 1.9.  See file COPYING for notices and license.
 
 ; Authors: Richard Kelsey, Jonathan Rees, Mike Sperber, Roderic Morris,
-; Eric Knauel, Martin Gasbichler
+; Eric Knauel, Martin Gasbichler, Will Noble
 
 (define-interface posix-files-interface
   (export directory-stream?
@@ -146,6 +146,7 @@
 	bitwise			;for manipulating protection masks
 	exceptions
 	posix-file-options
+	posix-time ; external binding for `posix-time-type'
 	channels
 	channel-i/o
 	channel-ports
@@ -247,6 +248,8 @@
 
 (define-structure posix-processes posix-processes-interface
   (open scheme
+  (subset external-events (wait-for-external-event))
+  (subset queues (make-queue enqueue! queue->list))
 	define-record-types finite-types
 	reinitializers
 	external-calls load-dynamic-externals
@@ -385,7 +388,8 @@
 	(subset unicode-char-maps (string-upcase string-foldcase))
 	session-data
 	interrupts
-	reinitializers)
+	reinitializers
+	weak)
   (files errno))
 
 (define-structure posix-syslog posix-syslog-interface
